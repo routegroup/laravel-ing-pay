@@ -25,9 +25,9 @@
     ],
     "require": {
         "php": "^8.4",
-        "illuminate/contracts": "^11.0||^12.0||^13.0",
-        "illuminate/http": "^11.0||^12.0||^13.0",
-        "illuminate/support": "^11.0||^12.0||^13.0",
+        "illuminate/contracts": "^13.0",
+        "illuminate/http": "^13.0",
+        "illuminate/support": "^13.0",
         "routegroup/php-ing-pay": "dev-main"
     },
     "require-dev": {
@@ -35,7 +35,7 @@
         "larastan/larastan": "^3.10",
         "laravel/pint": "^1.30.5",
         "nunomaduro/collision": "^8.9.5",
-        "orchestra/testbench": "^11.0||^10.0||^9.0",
+        "orchestra/testbench": "^11.0",
         "pestphp/pest": "^5.3",
         "pestphp/pest-plugin-phpstan": "^5.2",
         "pestphp/pest-plugin-rector": "^5.0",

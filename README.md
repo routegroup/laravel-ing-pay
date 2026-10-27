@@ -8,6 +8,12 @@ the gateway's model to [`routegroup/php-ing-pay`][core].
 > [`routegroup/laravel-imoje`][old] and has not been released. The API, the
 > paywall and notification verification are here; nothing is tagged yet.
 
+## Requirements
+
+PHP 8.4 and Laravel 13. Laravel 11 and 12 are not supported: this package is
+tested with Pest 5, which needs `symfony/process ^8`, and Laravel allows that
+only from 13. Laravel 11 is past its security window in any case.
+
 ## Configuration
 
 Add the service to `config/services.php`:
