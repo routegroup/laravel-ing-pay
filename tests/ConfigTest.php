@@ -45,11 +45,13 @@ it('still resolves an explicit environment', function (Environment $environment)
     expect(app(Config::class)->env)->toBe($environment);
 })->with([[Environment::SANDBOX], [Environment::PRODUCTION]]);
 
-it('takes the enum itself as readily as its value', function (Environment $environment): void {
-    config()->set('services.ing_pay', ingPayConfig(['env' => $environment]));
+it('takes the enum itself as readily as its value', function (): void {
+    // Only sandbox can prove this: production is also the fallback, so that
+    // case would pass whether the enum is understood or ignored.
+    config()->set('services.ing_pay', ingPayConfig(['env' => Environment::SANDBOX]));
 
-    expect(app(Config::class)->env)->toBe($environment);
-})->with([[Environment::SANDBOX], [Environment::PRODUCTION]]);
+    expect(app(Config::class)->env)->toBe(Environment::SANDBOX);
+});
 
 it('rejects an invalid environment with a message naming the config key', function (): void {
     config()->set('services.ing_pay', ingPayConfig(['env' => 'staging']));
