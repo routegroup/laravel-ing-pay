@@ -65,9 +65,17 @@ class IngPayServiceProvider extends ServiceProvider
         });
     }
 
-    /** env('ING_PAY_ENV') yields an empty string, not null, so a default never applies. */
+    /**
+     * env('ING_PAY_ENV') yields an empty string, not null, so a default never
+     * applies. The enum itself is accepted as readily as its value, since a
+     * config file is a reasonable place to write Environment::PRODUCTION.
+     */
     private function resolveEnvironment(mixed $value): Environment
     {
+        if ($value instanceof Environment) {
+            return $value;
+        }
+
         if (! is_string($value) || trim($value) === '') {
             return Environment::PRODUCTION;
         }
