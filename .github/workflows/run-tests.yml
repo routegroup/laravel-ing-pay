@@ -1,0 +1,105 @@
+name: run-tests
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.php'
+      - '.github/workflows/run-tests.yml'
+      - 'phpstan.neon.dist'
+      - 'phpunit.xml.dist'
+      - 'rector.php'
+      - 'composer.json'
+  pull_request:
+    paths:
+      - '**.php'
+      - '.github/workflows/run-tests.yml'
+      - 'phpstan.neon.dist'
+      - 'phpunit.xml.dist'
+      - 'rector.php'
+      - 'composer.json'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        php: ['8.5', '8.4']
+        laravel: [13.*, 12.*, 11.*]
+        include:
+          - laravel: 13.*
+            testbench: 11.*
+          - laravel: 12.*
+            testbench: 10.*
+          - laravel: 11.*
+            testbench: 9.*
+
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          coverage: none
+
+      - name: Setup problem matchers
+        run: |
+          echo "::add-matcher::${{ runner.tool_cache }}/php.json"
+          echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Install dependencies
+        run: |
+          composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
+          composer update --prefer-stable --prefer-dist --no-interaction
+
+      - name: List installed dependencies
+        run: composer show -D
+
+      - name: Execute tests
+        run: composer test:unit
+
+  analyse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Static analysis
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          coverage: none
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction
+      - name: Analyse types
+        run: composer test:types
+
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Lint
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          coverage: none
+      - name: Install dependencies
+        run: composer update --prefer-stable --prefer-dist --no-interaction
+      - name: Check Rector and Pint
+        run: composer test:lint
