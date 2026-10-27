@@ -42,7 +42,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          extensions: bcmath, curl, dom, exif, fileinfo, filter, gd, iconv, intl, json, libxml, mbstring, pcntl, pdo, pdo_sqlite, soap, sqlite, xmlwriter, zip
           coverage: none
 
       - name: Setup problem matchers
@@ -70,7 +70,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          extensions: bcmath, curl, dom, exif, fileinfo, filter, gd, iconv, intl, json, libxml, mbstring, pcntl, pdo, pdo_sqlite, soap, sqlite, xmlwriter, zip
           coverage: none
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction
@@ -88,7 +88,7 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.5'
-          extensions: dom, filter, json, libxml, mbstring, xmlwriter, zip, intl
+          extensions: bcmath, curl, dom, exif, fileinfo, filter, gd, iconv, intl, json, libxml, mbstring, pcntl, pdo, pdo_sqlite, soap, sqlite, xmlwriter, zip
           coverage: none
       - name: Install dependencies
         run: composer update --prefer-stable --prefer-dist --no-interaction
