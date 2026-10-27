@@ -5,8 +5,8 @@ application already holds, sends through Laravel's own HTTP client, and leaves
 the gateway's model to [`routegroup/php-ing-pay`][core].
 
 > **Status: under construction.** This package is being split out of
-> [`routegroup/laravel-imoje`][old] and is **not yet usable**. The paywall and
-> notification signature verification have not landed.
+> [`routegroup/laravel-imoje`][old] and has not been released. The API, the
+> paywall and notification verification are here; nothing is tagged yet.
 
 ## Configuration
 
@@ -43,6 +43,41 @@ $response = app(Api::class)->createTransaction(
 
 Your merchant and service are filled in on the way out, so a request never has
 to carry them.
+
+## The paywall
+
+The paywall is a signed form the payer's browser submits, so this builds a url
+rather than sending anything:
+
+```php
+return app(Paywall::class)->createTransaction($request, Lang::PL);
+```
+
+`url()` gives the same address without the redirect, for a form, a QR code or an
+e-mail. The signature is computed over the fields as they will be submitted, and
+an invoice or cart is encoded at that point rather than being carried encoded.
+
+## Notifications
+
+```php
+public function __invoke(Request $request, RequestValidator $validator): JsonResponse
+{
+    $validator->verifySignature($request);   // InvalidSignatureException
+    $validator->fromNotification($request);  // SchemaValidationException
+
+    $notification = new GenericNotification($request->json()->all());
+
+    return response()->json(['status' => 'ok']);
+}
+```
+
+The signature is checked against the body exactly as it arrived, not as Laravel
+would re-encode it. Report notifications arrive unsigned to their own address
+and must not be routed here — `verifySignature()` rejects them by design, and
+accepting one would mean trusting a download url an attacker supplied.
+
+`Utils::mockHeaders()` builds a header that passes this check, so you can test
+your own endpoint without the gateway.
 
 ## Testing
 

@@ -6,6 +6,7 @@ namespace Routegroup\IngPay\Laravel;
 
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
+use JsonSchema\Validator as JsonSchemaValidator;
 use Routegroup\IngPay\Api;
 use Routegroup\IngPay\Factories\Factory;
 use Routegroup\IngPay\Http\Client;
@@ -13,6 +14,8 @@ use Routegroup\IngPay\Laravel\Exceptions\InvalidEnvironmentException;
 use Routegroup\IngPay\Laravel\Http\LaravelClient;
 use Routegroup\IngPay\Lib\Config;
 use Routegroup\IngPay\Lib\Url;
+use Routegroup\IngPay\Lib\Utils;
+use Routegroup\IngPay\Lib\Validator;
 use Routegroup\IngPay\Types\Environment;
 
 class IngPayServiceProvider extends ServiceProvider
@@ -36,6 +39,23 @@ class IngPayServiceProvider extends ServiceProvider
 
         $this->app->bind(Client::class, fn (Application $app): Client => new LaravelClient($app->make(Config::class)));
         $this->app->bind(Url::class, fn (Application $app): Url => new Url($app->make(Config::class)));
+
+        $this->app->bind(Utils::class, fn (Application $app): Utils => new Utils($app->make(Config::class)));
+
+        $this->app->bind(Validator::class, fn (Application $app): Validator => new Validator(
+            new JsonSchemaValidator,
+            $app->make(Utils::class),
+            $app->make(Config::class),
+        ));
+
+        $this->app->bind(RequestValidator::class, fn (Application $app): RequestValidator => new RequestValidator(
+            $app->make(Validator::class),
+        ));
+
+        $this->app->bind(Paywall::class, fn (Application $app): Paywall => new Paywall(
+            $app->make(Config::class),
+            $app->make(Utils::class),
+        ));
 
         $this->app->bind(Api::class, fn (Application $app): Api => new Api(
             $app->make(Client::class),
@@ -87,6 +107,15 @@ class IngPayServiceProvider extends ServiceProvider
     /** @return list<class-string> */
     public function provides(): array
     {
-        return [Config::class, Client::class, Url::class, Api::class];
+        return [
+            Config::class,
+            Client::class,
+            Url::class,
+            Utils::class,
+            Validator::class,
+            RequestValidator::class,
+            Paywall::class,
+            Api::class,
+        ];
     }
 }
