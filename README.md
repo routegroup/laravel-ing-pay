@@ -1,20 +1,24 @@
 # ING Pay for Laravel
 
-The Laravel side of the ING Pay gateway client: it binds the configuration your
-application already holds, sends through Laravel's own HTTP client, and leaves
-the gateway's model to [`routegroup/php-ing-pay`][core].
+The Laravel layer for [`routegroup/php-ing-pay`][core], the ING Pay gateway
+client: it builds the client from `config/services.php`, sends through Laravel's
+HTTP client, and binds the paywall builder and notification validator in the
+container.
 
-> **Status: under construction.** This package is being split out of
-> [`routegroup/laravel-imoje`][old] and has not been released. The API, the
-> paywall and notification verification are here; nothing is tagged yet.
+**Documentation: https://php-ing-pay.routegroup.pl**
 
-## Requirements
+## Installation
 
-PHP 8.4 and Laravel 13. Laravel 11 and 12 are not supported: this package is
-tested with Pest 5, which needs `symfony/process ^8`, and Laravel allows that
-only from 13. Laravel 11 is past its security window in any case.
+PHP 8.4 and Laravel 13:
 
-## Configuration
+```sh
+composer require routegroup/laravel-ing-pay
+```
+
+The package is not tagged on Packagist yet, so this resolves once the first
+release is out.
+
+## Usage
 
 Add the service to `config/services.php`:
 
@@ -30,82 +34,40 @@ use Routegroup\IngPay\Types\Environment;
 ],
 ```
 
-An empty `ING_PAY_ENV` resolves to production rather than failing, because a
-bare `.env` produces an empty string rather than nothing at all. An environment
-that is neither `production` nor `sandbox` is refused by name.
-
-`strict_errors`, `timeout` and `connect_timeout` are optional and default to
-raising on every refusal, 30 seconds and 10 seconds.
-
-## Sending
-
-Resolve the client and call it:
+Then resolve the `Api` and call it:
 
 ```php
-$response = app(Api::class)->createTransaction(
-    CreateTransactionRequest::factory()->make()   // or build one yourself
-);
+use Routegroup\IngPay\Api;
+use Routegroup\IngPay\Api\CreateTransactionRequest;
+use Routegroup\IngPay\Types\Currency;
+use Routegroup\IngPay\Types\PaymentMethod;
+use Routegroup\IngPay\Types\PaymentMethodCode;
+
+$response = app(Api::class)->createTransaction(new CreateTransactionRequest([
+    'amount' => 4999,
+    'currency' => Currency::PLN,
+    'orderId' => 'ORDER-1042',
+    'paymentMethod' => PaymentMethod::PAY_BY_LINK,
+    'paymentMethodCode' => PaymentMethodCode::ING,
+    'successReturnUrl' => route('orders.paid', 1042),
+    'failureReturnUrl' => route('orders.failed', 1042),
+    'customer' => ['firstName' => 'Anna', 'lastName' => 'Kowalska', 'email' => 'anna@example.com'],
+]));
+
+$response->transaction->id;
 ```
 
-Your merchant and service are filled in on the way out, so a request never has
-to carry them.
+The [documentation][docs] covers the paywall, payment links, the card widget,
+notifications, refunds and testing, with a Laravel tab on every sample.
 
-## The paywall
+## Development
 
-The paywall is a signed form the payer's browser submits, so the core's
-`Paywall` builds a url rather than sending anything. Redirect to it:
-
-```php
-return redirect(app(Paywall::class)->url($request, Lang::PL));
-```
-
-The same url works in a form, a QR code or an e-mail, and `fields()` gives the
-signed fields themselves, for the card widget's `data-*` attributes. The
-signature is computed over the fields as they will be submitted, and an invoice
-or cart is encoded at that point rather than being carried encoded.
-
-## Notifications
-
-```php
-public function __invoke(Request $request, RequestValidator $validator): JsonResponse
-{
-    $validator->verifySignature($request);   // InvalidSignatureException
-    $validator->fromNotification($request);  // SchemaValidationException
-
-    $notification = new GenericNotification($request->json()->all());
-
-    return response()->json(['status' => 'ok']);
-}
-```
-
-The signature is checked against the body exactly as it arrived, not as Laravel
-would re-encode it. Report notifications arrive unsigned to their own address
-and must not be routed here — `verifySignature()` rejects them by design, and
-accepting one would mean trusting a download url an attacker supplied.
-
-`Utils::mockHeaders()` builds a header that passes this check, so you can test
-your own endpoint without the gateway.
-
-## Testing
-
-Requests go through Laravel's HTTP client, so `Http::fake()` intercepts them —
-which is the reason the core takes a client rather than making one:
-
-```php
-Http::fake(['*' => Http::response(['status' => 'settled'])]);
-
-$response = app(Api::class)->getTransaction('tx-1');
-
-Http::assertSent(fn (Request $request) => $request->url() === '...');
-```
-
-While running tests, every factory in the core also carries your configured
-merchant and service, so a payload you build matches the application under test
-without saying so each time.
+`composer test` runs the same lint, type and test gate as CI, for example
+`docker compose run --rm app composer test`.
 
 ## Licence
 
 MIT. See [LICENSE.md](LICENSE.md).
 
 [core]: https://github.com/routegroup/php-ing-pay
-[old]: https://github.com/routegroup/laravel-imoje
+[docs]: https://php-ing-pay.routegroup.pl
