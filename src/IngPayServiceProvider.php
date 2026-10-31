@@ -16,6 +16,7 @@ use Routegroup\IngPay\Lib\Config;
 use Routegroup\IngPay\Lib\Url;
 use Routegroup\IngPay\Lib\Utils;
 use Routegroup\IngPay\Lib\Validator;
+use Routegroup\IngPay\Paywall;
 use Routegroup\IngPay\Types\Environment;
 
 class IngPayServiceProvider extends ServiceProvider
