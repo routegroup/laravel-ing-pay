@@ -52,16 +52,17 @@ to carry them.
 
 ## The paywall
 
-The paywall is a signed form the payer's browser submits, so this builds a url
-rather than sending anything:
+The paywall is a signed form the payer's browser submits, so the core's
+`Paywall` builds a url rather than sending anything. Redirect to it:
 
 ```php
-return app(Paywall::class)->createTransaction($request, Lang::PL);
+return redirect(app(Paywall::class)->url($request, Lang::PL));
 ```
 
-`url()` gives the same address without the redirect, for a form, a QR code or an
-e-mail. The signature is computed over the fields as they will be submitted, and
-an invoice or cart is encoded at that point rather than being carried encoded.
+The same url works in a form, a QR code or an e-mail, and `fields()` gives the
+signed fields themselves, for the card widget's `data-*` attributes. The
+signature is computed over the fields as they will be submitted, and an invoice
+or cart is encoded at that point rather than being carried encoded.
 
 ## Notifications
 
