@@ -1,0 +1,67 @@
+# The usage docs at https://php-ing-pay.routegroup.pl are built in
+# routegroup/php-ing-pay and import Laravel samples from this repo's tests/Docs.
+# Pull requests build that site against their own files; pushes to main ask
+# php-ing-pay to rebuild and redeploy it.
+name: docs
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    name: Build php-ing-pay docs site
+
+    defaults:
+      run:
+        working-directory: docs
+
+    steps:
+      - name: Checkout php-ing-pay
+        uses: actions/checkout@v7
+        with:
+          repository: routegroup/php-ing-pay
+          ref: main
+          persist-credentials: false
+
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          path: docs/.laravel
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: docs/.nvmrc
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run docs:build
+
+  dispatch:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    name: Redeploy php-ing-pay docs site
+
+    steps:
+      - name: Send repository_dispatch
+        env:
+          GH_TOKEN: ${{ secrets.PHP_ING_PAY_DISPATCH_TOKEN }}
+        run: >
+          gh api repos/routegroup/php-ing-pay/dispatches
+          -f event_type=laravel-docs-updated
+          -f "client_payload[sha]=${{ github.sha }}"
