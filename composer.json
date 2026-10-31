@@ -17,18 +17,12 @@
             "role": "Developer"
         }
     ],
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/routegroup/php-ing-pay"
-        }
-    ],
     "require": {
         "php": "^8.4",
         "illuminate/contracts": "^13.0",
         "illuminate/http": "^13.0",
         "illuminate/support": "^13.0",
-        "routegroup/php-ing-pay": "dev-main"
+        "routegroup/php-ing-pay": "^1.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
@@ -82,6 +76,6 @@
             ]
         }
     },
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true
 }
