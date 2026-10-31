@@ -15,9 +15,6 @@ PHP 8.4 and Laravel 13:
 composer require routegroup/laravel-ing-pay
 ```
 
-The package is not tagged on Packagist yet, so this resolves once the first
-release is out.
-
 ## Usage
 
 Add the service to `config/services.php`:
